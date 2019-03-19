@@ -1,9 +1,21 @@
 #include<iostream>
 #include<stack>
 #include<stdlib.h>
+#include<math.h>
+#include<queue>
 
 using namespace std;
+int score(int **a);
+//三维数组复制 
+void tri(int **a,int **b,int n=3){
+	for(int i=0;i<n;i++){
+		for(int j=0;j<n;j++){
+			a[i][j] = b[i][j];
+		}
+	}
+}
 
+//判断棋盘是否相同 
 bool equal(int **a,int **b,int n=3){
 	for(int i=0;i<n;i++){
 		for(int j=0;j<n;j++){
@@ -15,17 +27,73 @@ bool equal(int **a,int **b,int n=3){
 	return true;
 }
 
+//节点结构体 
 struct node{
+	node* pre;
 	node* next;
-	int a[3][3];
+	int **a;
+	int point;
+	int oped; 
 }*pnode;
 
-struct ops{
-	int a[4];
-	int i;
-};
+//判断是否在表中 
+node* in_list(int **&a,node* pn){
+	if(pn==NULL) return NULL;
+	node* temp = pn;
+	while(temp->next!=pn){
+		if(equal(a,temp->a)){
+			return temp;
+		}
+		temp = temp->next;
+	}
+	return NULL;
+}
 
-//乱序 
+void insert(node* pn1,node* pn2){
+	
+}
+//向表中插入，尾插 
+void insert(int **a,node* &pn){
+	if(!pn)
+	{
+		pn = (node*)malloc(sizeof(node));
+		pn->a = (int**)malloc(sizeof(int)*3);
+		for(int i=0;i<3;i++)
+			pn->a[i] = (int*)malloc(sizeof(int)*3);
+		tri(pn->a,a);
+		pn->next = pn->pre = pn;
+		pn->point = score(a);
+		pn->oped = 0;
+		return;
+	}
+	node* temp = (node*)malloc(sizeof(node));
+	temp->a = (int**)malloc(sizeof(int)*3);
+	for(int i=0;i<3;i++)
+		temp->a[i] = (int*)malloc(sizeof(int)*3);
+		
+	temp->next = pn;
+	temp->pre = pn->pre;
+	pn->pre = temp;
+	temp->pre->next = temp;
+	tri(temp->a,a);
+	temp->point = score(a);
+	temp->oped = 0;
+}
+
+//删除节点 
+void delete_node(node* pn){
+	if(pn->next == pn){
+		free(pn);
+		pn=NULL;
+		return;
+	}
+	pn->next->pre = pn->pre;
+	pn->pre->next = pn->next;
+	free(pn->a);
+	free(pn);
+} 
+
+//乱序 （生成棋盘时使用） 
 void rand_sort(int *a,int n){
 	stack<int>s;
 	while(n){
@@ -41,44 +109,60 @@ void rand_sort(int *a,int n){
 	}
 }
 
-int max_index(int *a,int n){
-	int max = 0;
+//返回最大值索引 （移动优先级列表） 
+int max_index(int *a,int n=4){
+	int index = 0;
 	for(int i=0;i<n;i++){
-		if(a[i] > a[max]){
-			max = i;
+		if(a[i] > a[index]){
+			index = i;
 		}
 	}
-	return max;
+	return index;
 }
 
-//形势判断
-int score(int a[][3]){
-	int score=0;
+//越接近目标score越大 
+int score(int **a){
+	int score=36;
+	int t=0;
 	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			if(!a[i][j]){
-				score += 4-i-j;
+				t = a[i][j] - 1;
+				int temp = abs(2-i) + abs(2-j);
+				score -= temp;
+//				cout<<a[i][j]<<','<<temp<<endl;
 			}
 			else{
-				score += (a[i][j]/3+a[i][j]%3)-i-j;
+				t = a[i][j] - 1;
+				int temp = abs(t/3-i) + abs(t%3-j);
+				score -=  temp;
+//				cout<<a[i][j]<<','<<temp<<endl;
 			}
 		}
 	}
 	return score;
 } 
 
-
-
 //八数码 
 class board{
 	public:
-		int a[3][3];
+		int **a;
 		int space[2];
-		int move_list[4];
-		stack<struct ops>op_list;
+		int score_list[4];
+		int ops[4];
+		node* open;
+		node* closed;
+		int step;
 	public:
 		board(){
-			cin>>space[0]>>space[1];
+			a = (int**)malloc(sizeof(int*)*3);
+			for(int i=0;i<3;i++){
+				a[i] = (int*)malloc(sizeof(int)*3);
+			}
+			step = 0;
+			int x = rand()%8;
+			space[0] = x%8;
+			space[1] = x/8;
 			int arr[8];
 			for(int i=0;i<8;i++){
 				arr[i] = i+1;
@@ -97,6 +181,8 @@ class board{
 				}
 			}
 			//生成棋盘 
+			open = NULL;
+			closed = NULL;
 		}
 		void show(){
 			for(int i=0;i<3;i++){
@@ -110,7 +196,7 @@ class board{
 		//这里的move移动的不是数字，而是空白格的位置 
 		int move_up(){
 			if(space[0] == 0){
-				cout<<"can not move up\n";
+//				cout<<"can not move up\n";
 				return 0;
 			}
 			else{
@@ -122,7 +208,7 @@ class board{
 		}
 		int move_down(){
 			if(space[0] == 2){
-				cout<<"can not move down\n";
+//				cout<<"can not move down\n";
 				return 0;
 			}
 			else{
@@ -134,7 +220,7 @@ class board{
 		}
 		int move_left(){
 			if(space[1] == 0){
-				cout<<"can not move left\n";
+//				cout<<"can not move left\n";
 				return 0;
 			}
 			else{
@@ -146,7 +232,7 @@ class board{
 		}
 		int move_right(){
 			if(space[1] == 2){
-				cout<<"can not move right\n";
+//				cout<<"can not move right\n";
 				return 0;
 			}
 			else{
@@ -173,70 +259,157 @@ class board{
 		//得到方向优先级列表 
 		//0->up 1->down 2->left 3->right
 		void get_score_list(){
-			move_list[0] = move_up();
+			score_list[0] = move_up();
 //			show();
-			if(move_list[0])
-			move_down();
+			if(score_list[0])
+				move_down();
 			
-			move_list[1] = move_down();
+			score_list[1] = move_down();
 //			show();
-			if(move_list[1])
-			move_up();
+			if(score_list[1])
+				move_up();
 			
-			move_list[2] = move_left();
+			score_list[2] = move_left();
 //			show();
-			if(move_list[2])
-			move_right();
+			if(score_list[2])
+				move_right();
 			
-			move_list[3] = move_right();
+			score_list[3] = move_right();
 //			show();
-			if(move_list[3])
-			move_left();
+			if(score_list[3])
+				move_left();
 		}
-		//移动过程，将移动操作列表存入栈里 (非递归形式)
-		void play(){
-			int point = score(a);
-			int t = 0;
-			while(point&&t<40){
-				get_score_list();
-				ops op;
-				op.i = 0;
-				for(int i=0;i<4;i++){
-					op.a[i] = max_index(move_list,4);
-					move_list[i] = -1;
+//		操作列表
+		void get_ops(){
+			for(int i=0;i<4;i++){
+				if(!score_list[i]){
+					ops[i] = -1;
 				}
-				if(!op_list.empty())
-				if(op.a[op.i]+op_list.top().a[op_list.top().i] == 1
-				 ||op.a[op.i]+op_list.top().a[op_list.top().i] == 4)
-				 {
-				 	op = op_list.top();
-				 	op_list.pop();
-				 	op.i +=1 ;
-				 }
-				
-//				cout<<op<<endl;
-				op_list.push(op);
-				if(op.a[op.i] == 0){
-					move_up();
+				else{
+					ops[i] = max_index(score_list, 4);
+					score_list[ops[i]] = -10;
 				}
-				else if(op.a[op.i] == 1){
-					move_down();
-				}
-				else if(op.a[op.i] == 2){
-					move_left();
-				}
-				else if(op.a[op.i] == 3){
-					move_right();
-				}
-				show();
-				t++;
-				point = score(a);
 			}
 		}
-		
+		void showop(){
+			cout<<endl;
+			for(int i=0;i<4;i++)
+				cout<<ops[i]<<',';
+			cout<<endl;
+		}
+		void showsc(){
+			cout<<endl;
+			for(int i=0;i<4;i++)
+				cout<<score_list[i]<<',';
+			cout<<endl;
+		}
 		//A*算法 open&closed
 		void A_star(){
-			
+			//open in
+			//open表初始化 
+			insert(a,open);
+			while(open!=NULL){
+//				if(step>10)
+//					break;
+//				获得分数列表 
+				get_score_list();
+				showsc();
+//				获得操作列表 
+				get_ops();
+				showop();
+//				扩展节点，如果节点扩展完毕则关闭节点
+				int index = open->pre->oped++; 
+				if(index>3){
+					node* temp = open;
+					open = open->next;
+					insert(temp->a,closed);
+					delete_node(temp);
+					cout<<"扩展完成\n";
+				}
+				else{
+//					在边界时只有2-3个可扩展节点
+					if(ops[index]<0){
+						cout<<"cantopen\n";
+					} 
+					else{
+						if(ops[index] == 0){
+							move_up();
+						}
+						else if(ops[index] == 1){
+							move_down();
+						}
+						else if(ops[index] == 2){
+							move_left();
+						}
+						else if(ops[index] == 3){
+							move_right();
+						}
+						node* temp;
+//						打开过，往回走 
+						if((temp = in_list(a,open)) != NULL) {
+							step--; 
+							cout<<"opened\n";
+							if(temp->point > step+score(a)){
+								temp->point = step+score(a);
+							}
+							if(ops[index] == 0){
+								move_down();
+							}
+							else if(ops[index] == 1){
+								move_up();
+							}
+							else if(ops[index] == 2){
+								move_right();
+							}
+							else if(ops[index] == 3){
+								move_left();
+							}
+						}
+//						已关闭，往回走  
+						else if((temp = in_list(a,closed)) != NULL){
+							step--;
+							cout<<"colsed\n";
+							if(temp->point > step+score(a)){
+								temp->point = step+score(a);
+							}
+							if(ops[index] == 0){
+								move_down();
+							}
+							else if(ops[index] == 1){
+								move_up();
+							}
+							else if(ops[index] == 2){
+								move_right();
+							}
+							else if(ops[index] == 3){
+								move_left();
+							}
+						}
+						else{
+							insert(a,open);
+							step++;
+							open->pre->point += step;
+							
+						show();
+						}
+					}
+				}
+				int **b = (int**)malloc(sizeof(int*)*3);
+				for(int i=0;i<3;i++){
+					b[i] = (int*)malloc(sizeof(int)*3);
+				}
+				for(int i=0;i<3;i++){
+					for(int j=0;j<3;j++){
+						b[i][j] = 3*i+j;
+					}
+				}
+				if(equal(a,b)){
+					cout<<"successed\n";
+					return;
+				}
+				
+				
+			}
 		}
 };
 
@@ -244,6 +417,12 @@ int main()
 
 {
 	board B = board();
-	B.play();
+	B.show();
+	
+//	B.get_score_list();
+//	B.showsc();
+//	B.get_ops();
+//	B.showop();
+	B.A_star();
 	return 0;
 }
