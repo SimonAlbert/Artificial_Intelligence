@@ -29,12 +29,21 @@ bool equal(int **a,int **b,int n=3){
 
 //节点结构体 
 struct node{
-	node* pre;
-	node* next;
+//	父节点的索引，一定在closed表内 
+	int father;
 	int **a;
 	int point;
-	int oped; 
 }*pnode;
+//表 在存储位置不变的前提下维护open表和closed表；采用双向链表，表头存储最优子节点（小根堆） 
+class list{
+	public:
+		node* l;
+	public:
+		list(){
+			l = NULL;
+		} 
+		in
+}; 
 
 //判断是否在表中 
 node* in_list(int **&a,node* pn){
@@ -109,11 +118,11 @@ void rand_sort(int *a,int n){
 	}
 }
 
-//返回最大值索引 （移动优先级列表） 
+//返回最小值索引 （移动优先级列表） 
 int max_index(int *a,int n=4){
 	int index = 0;
 	for(int i=0;i<n;i++){
-		if(a[i] > a[index]){
+		if(a[i] < a[index]){
 			index = i;
 		}
 	}
@@ -122,20 +131,20 @@ int max_index(int *a,int n=4){
 
 //越接近目标score越大 
 int score(int **a){
-	int score=36;
+	int score=0;
 	int t=0;
 	for(int i=0;i<3;i++){
 		for(int j=0;j<3;j++){
 			if(!a[i][j]){
 				t = a[i][j] - 1;
 				int temp = abs(2-i) + abs(2-j);
-				score -= temp;
+				score += temp;
 //				cout<<a[i][j]<<','<<temp<<endl;
 			}
 			else{
 				t = a[i][j] - 1;
 				int temp = abs(t/3-i) + abs(t%3-j);
-				score -=  temp;
+				score +=  temp;
 //				cout<<a[i][j]<<','<<temp<<endl;
 			}
 		}
@@ -304,7 +313,16 @@ class board{
 			cout<<endl;
 		}
 		//A*算法 open&closed
-		void A_star(){
+		void A_star(){	
+			int **b = (int**)malloc(sizeof(int*)*3);
+			for(int i=0;i<3;i++){
+				b[i] = (int*)malloc(sizeof(int)*3);
+			}
+			for(int i=0;i<3;i++){
+				for(int j=0;j<3;j++){
+					b[i][j] = 3*i+j;
+				}
+			}
 			//open in
 			//open表初始化 
 			insert(a,open);
@@ -317,98 +335,24 @@ class board{
 //				获得操作列表 
 				get_ops();
 				showop();
+				node x = max_node(open);
 //				扩展节点，如果节点扩展完毕则关闭节点
-				int index = open->pre->oped++; 
-				if(index>3){
-					node* temp = open;
-					open = open->next;
-					insert(temp->a,closed);
-					delete_node(temp);
-					cout<<"扩展完成\n";
-				}
-				else{
-//					在边界时只有2-3个可扩展节点
-					if(ops[index]<0){
-						cout<<"cantopen\n";
-					} 
+				for(int i=0;i<4;i++){
+					if(ops[i] < 0){
+						cout<<"\ncant open\n";
+					}
 					else{
-						if(ops[index] == 0){
+						if(ops[i] == 0){
 							move_up();
-						}
-						else if(ops[index] == 1){
-							move_down();
-						}
-						else if(ops[index] == 2){
-							move_left();
-						}
-						else if(ops[index] == 3){
-							move_right();
-						}
-						node* temp;
-//						打开过，往回走 
-						if((temp = in_list(a,open)) != NULL) {
-							step--; 
-							cout<<"opened\n";
-							if(temp->point > step+score(a)){
-								temp->point = step+score(a);
-							}
-							if(ops[index] == 0){
-								move_down();
-							}
-							else if(ops[index] == 1){
-								move_up();
-							}
-							else if(ops[index] == 2){
-								move_right();
-							}
-							else if(ops[index] == 3){
-								move_left();
-							}
-						}
-//						已关闭，往回走  
-						else if((temp = in_list(a,closed)) != NULL){
-							step--;
-							cout<<"colsed\n";
-							if(temp->point > step+score(a)){
-								temp->point = step+score(a);
-							}
-							if(ops[index] == 0){
-								move_down();
-							}
-							else if(ops[index] == 1){
-								move_up();
-							}
-							else if(ops[index] == 2){
-								move_right();
-							}
-							else if(ops[index] == 3){
-								move_left();
-							}
-						}
-						else{
-							insert(a,open);
-							step++;
-							open->pre->point += step;
-							
-						show();
+							open
 						}
 					}
-				}
-				int **b = (int**)malloc(sizeof(int*)*3);
-				for(int i=0;i<3;i++){
-					b[i] = (int*)malloc(sizeof(int)*3);
-				}
-				for(int i=0;i<3;i++){
-					for(int j=0;j<3;j++){
-						b[i][j] = 3*i+j;
-					}
-				}
+				} 
+				
 				if(equal(a,b)){
 					cout<<"successed\n";
 					return;
 				}
-				
-				
 			}
 		}
 };
