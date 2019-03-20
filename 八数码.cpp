@@ -8,15 +8,16 @@ using namespace std;
 int score(int **a);
 //三维数组复制 
 void tri(int **a,int **b,int n=3){
+//	cout<<"tri"<<endl;
 	for(int i=0;i<n;i++){
 		for(int j=0;j<n;j++){
 			a[i][j] = b[i][j];
 		}
 	}
 }
-
 //判断棋盘是否相同 
 bool equal(int **a,int **b,int n=3){
+//	cout<<"equal"<<endl;
 	for(int i=0;i<n;i++){
 		for(int j=0;j<n;j++){
 			if(a[i][j] != b[i][j]){
@@ -33,74 +34,144 @@ struct node{
 	int father;
 	int **a;
 	int point;
+	int step;
 }*pnode;
-//表 在存储位置不变的前提下维护open表和closed表；采用双向链表，表头存储最优子节点（小根堆） 
+
+void init_node(node* pn){
+	pn->a = (int**)malloc(sizeof(int*)*3);
+	for(int j=0;j<3;j++){
+		pn->a[j] = (int*)malloc(sizeof(int)*3);
+	}
+}
+node* init_node(int **a,int father,int point,int step=0){
+	node* pn = (node*)malloc(sizeof(node));
+	pn->a = (int**)malloc(sizeof(int*)*3);
+	for(int i=0;i<3;i++){
+		pn->a[i] = (int*)malloc(sizeof(int)*3);
+	}
+	tri(pn->a,a);
+	pn->father = father;
+	pn->step = step;
+	pn->point = point;
+	return pn;
+}
+//表 在存储位置不变的前提下维护open表和closed表
 class list{
 	public:
 		node* l;
+		int num;
 	public:
 		list(){
-			l = NULL;
-		} 
-		in
-}; 
-
-//判断是否在表中 
-node* in_list(int **&a,node* pn){
-	if(pn==NULL) return NULL;
-	node* temp = pn;
-	while(temp->next!=pn){
-		if(equal(a,temp->a)){
-			return temp;
+			num = 0;
+			l = (node*)malloc(sizeof(node)*100);
+			for(int i=0;i<100;i++){
+				init_node(l+i);
+			}
 		}
-		temp = temp->next;
-	}
-	return NULL;
-}
-
-void insert(node* pn1,node* pn2){
-	
-}
-//向表中插入，尾插 
-void insert(int **a,node* &pn){
-	if(!pn)
-	{
-		pn = (node*)malloc(sizeof(node));
-		pn->a = (int**)malloc(sizeof(int)*3);
-		for(int i=0;i<3;i++)
-			pn->a[i] = (int*)malloc(sizeof(int)*3);
-		tri(pn->a,a);
-		pn->next = pn->pre = pn;
-		pn->point = score(a);
-		pn->oped = 0;
-		return;
-	}
-	node* temp = (node*)malloc(sizeof(node));
-	temp->a = (int**)malloc(sizeof(int)*3);
-	for(int i=0;i<3;i++)
-		temp->a[i] = (int*)malloc(sizeof(int)*3);
-		
-	temp->next = pn;
-	temp->pre = pn->pre;
-	pn->pre = temp;
-	temp->pre->next = temp;
-	tri(temp->a,a);
-	temp->point = score(a);
-	temp->oped = 0;
-}
-
-//删除节点 
-void delete_node(node* pn){
-	if(pn->next == pn){
-		free(pn);
-		pn=NULL;
-		return;
-	}
-	pn->next->pre = pn->pre;
-	pn->pre->next = pn->next;
-	free(pn->a);
-	free(pn);
-} 
+		void update(){
+			for(int i=1;i<num;i++){
+				l[i].point -= l[i].step;
+				l[i].step = l[l[i].father].step+1;
+				l[i].point += l[i].step;
+			}
+		}
+		int in_list(int **a){
+//			cout<<"in_list"<<endl;
+			for(int i=0;i<num;i++){
+				if(equal(a,l[i].a)){
+					return i;
+				}
+			}
+			return -1;
+		}
+//		插入时需要的参数 
+		int put_in(int **a,int father,int point,int step){
+			int index = num;
+//			节点已存在时 
+			int pos = in_list(a);
+			if(pos != -1){
+				if(step < l[pos].step){
+					l[pos].father = father;
+					l[pos].point = point;
+					l[pos].step = step;
+					return pos;
+				}
+			}
+			else{
+				num++;
+				l[index].father = father;
+				l[index].point = point;
+				l[index].step = step;
+				tri(l[index].a,a);
+				return index;
+			}
+		}
+		int put_in(node* pn){
+			int index = num;
+//			节点已存在时 
+			int pos = in_list(pn->a);
+			if(pos != -1){
+				if(pn->step < l[pos].step){
+					l[pos].father = pn->father;
+					l[pos].point = pn->point;
+					l[pos].step = pn->step;
+					return pos;
+				}
+			}
+			else{
+				num++;
+				l[index].father = pn->father;
+				l[index].point = pn->point;
+				l[index].step = pn->step;
+				tri(l[index].a,pn->a);
+				return index;
+			}
+		}
+//		open表最优节点放屁股上 
+		void sort(){
+			if(num <= 1) return;
+			int min = num-1;
+			int max = num-1;
+			for(int i=0;i<num;i++){
+				if(l[min].point > l[i].point){
+					min = i;
+				}
+			}
+			int i=num-1;
+//			node *pn = init_node(,l[i].father,l[i].point,l[i].step);
+			node n;
+			init_node(&n);
+			tri(n.a,l[i].a);
+			n.father = l[i].father;
+			n.point = l[i].point;
+			n.step = l[i].step;
+			node* pn = &n;
+//			cout<<"ok\n";
+			tri(l[i].a,l[min].a);
+			l[i].father = l[min].father;
+			l[i].point = l[min].point;
+			l[i].step = l[min].step;
+			tri(l[min].a,pn->a);
+			l[min].father = pn->father;
+			l[min].point = pn->point;
+			l[min].step = pn->step; 
+		}
+		void show(){
+			cout<<"list\n";
+			for(int k=0;k<num;k++){
+				for(int i=0;i<3;i++){
+					for(int j=0;j<3;j++){
+						cout<<l[k].a[i][j]<<' ';
+					}
+					cout<<endl;
+				}
+				cout<<"step:"<<l[k].step;
+				cout<<endl;
+			}
+			cout<<num<<endl;
+			cout<<"list end\n";
+		}
+}; 
 
 //乱序 （生成棋盘时使用） 
 void rand_sort(int *a,int n){
@@ -149,6 +220,7 @@ int score(int **a){
 			}
 		}
 	}
+	score += 1;
 	return score;
 } 
 
@@ -159,39 +231,57 @@ class board{
 		int space[2];
 		int score_list[4];
 		int ops[4];
-		node* open;
-		node* closed;
-		int step;
 	public:
 		board(){
 			a = (int**)malloc(sizeof(int*)*3);
 			for(int i=0;i<3;i++){
 				a[i] = (int*)malloc(sizeof(int)*3);
 			}
-			step = 0;
-			int x = rand()%8;
-			space[0] = x%8;
-			space[1] = x/8;
-			int arr[8];
-			for(int i=0;i<8;i++){
-				arr[i] = i+1;
+			a = (int**)malloc(sizeof(int*)*3);
+			for(int i=0;i<3;i++){
+				a[i] = (int*)malloc(sizeof(int)*3);
 			}
-			rand_sort(arr,8);
-			int t=0;
 			for(int i=0;i<3;i++){
 				for(int j=0;j<3;j++){
-					if(i==space[0]&&j==space[1]){
-						a[i][j] = 0;
-					}
-					else{
-						a[i][j] = arr[t];
-						t++;
-					}
+					a[i][j] = 3*i+j+1;
 				}
 			}
-			//生成棋盘 
-			open = NULL;
-			closed = NULL;
+			a[2][2] = 0;
+			show();
+			space[0] = 2;
+			space[1] = 2;
+			int op;
+			for(int i=0;i<30;i++){
+				op = rand()%4;
+				if(op==0)
+					move_up();
+				else if(op==1)
+					move_down();
+				else if(op==2)
+					move_left();
+				else if(op==3)
+					move_right();
+			}
+//			int x = rand()%8;
+//			space[0] = x%8;
+//			space[1] = x/8;
+//			int arr[8];
+//			for(int i=0;i<8;i++){
+//				arr[i] = i+1;
+//			}
+//			rand_sort(arr,8);
+//			int t=0;
+//			for(int i=0;i<3;i++){
+//				for(int j=0;j<3;j++){
+//					if(i==space[0]&&j==space[1]){
+//						a[i][j] = 0;
+//					}
+//					else{
+//						a[i][j] = arr[t];
+//						t++;
+//					}
+//				}
+//			}
 		}
 		void show(){
 			for(int i=0;i<3;i++){
@@ -251,109 +341,91 @@ class board{
 				return score(a);
 			}
 		}
-		int move(int x,int y){
-			if((space[0]+x > 2||space[0]+x <= 0)
-				||(space[1]+y > 2||space[1]+y <= 0)){
-				cout<<"can not move\n";
-				return 0;
-			}
-			else{
-				a[space[0]][space[1]] = a[space[0]+x][space[1]+y];
-				space[0] += x;
-				space[1] += y;
-				a[space[0]][space[1]] = 0;
-				return score(a);
-			}
-		}
-		//得到方向优先级列表 
-		//0->up 1->down 2->left 3->right
-		void get_score_list(){
-			score_list[0] = move_up();
-//			show();
-			if(score_list[0])
-				move_down();
-			
-			score_list[1] = move_down();
-//			show();
-			if(score_list[1])
-				move_up();
-			
-			score_list[2] = move_left();
-//			show();
-			if(score_list[2])
-				move_right();
-			
-			score_list[3] = move_right();
-//			show();
-			if(score_list[3])
-				move_left();
-		}
-//		操作列表
-		void get_ops(){
-			for(int i=0;i<4;i++){
-				if(!score_list[i]){
-					ops[i] = -1;
-				}
-				else{
-					ops[i] = max_index(score_list, 4);
-					score_list[ops[i]] = -10;
+		
+		void get_space(){
+			for(int i=0;i<3;i++){
+				for(int j=0;j<3;j++){
+					if(!a[i][j]){
+						space[0] = i;
+						space[1] = j;
+						return;
+					}
 				}
 			}
-		}
-		void showop(){
-			cout<<endl;
-			for(int i=0;i<4;i++)
-				cout<<ops[i]<<',';
-			cout<<endl;
-		}
-		void showsc(){
-			cout<<endl;
-			for(int i=0;i<4;i++)
-				cout<<score_list[i]<<',';
-			cout<<endl;
 		}
 		//A*算法 open&closed
-		void A_star(){	
+		void A_star(){
 			int **b = (int**)malloc(sizeof(int*)*3);
 			for(int i=0;i<3;i++){
 				b[i] = (int*)malloc(sizeof(int)*3);
 			}
 			for(int i=0;i<3;i++){
 				for(int j=0;j<3;j++){
-					b[i][j] = 3*i+j;
+					b[i][j] = 3*i+j+1;
 				}
 			}
-			//open in
-			//open表初始化 
-			insert(a,open);
-			while(open!=NULL){
-//				if(step>10)
-//					break;
-//				获得分数列表 
-				get_score_list();
-				showsc();
-//				获得操作列表 
-				get_ops();
-				showop();
-				node x = max_node(open);
-//				扩展节点，如果节点扩展完毕则关闭节点
-				for(int i=0;i<4;i++){
-					if(ops[i] < 0){
-						cout<<"\ncant open\n";
-					}
-					else{
-						if(ops[i] == 0){
-							move_up();
-							open
-						}
-					}
-				} 
+			b[2][2] = 0;
+			list open = list();
+			list closed = list();
+			open.put_in(a,-1,score(a),0);
+//			show();
+			int deep=0;
+			while(open.num){
+//				if(deep++ > 50) return;
+				//从open表中取出一个最好的节点
+				if(score(a) >= 3) 
+				open.sort();
+				node* tmp = &(open.l[open.num-1]);
+				tri(a,tmp->a);
+				get_space();
 				
+				//判断这个节点是否是目的节点
 				if(equal(a,b)){
-					cout<<"successed\n";
+					show();
+					cout<<"\nsuccess\n";
 					return;
 				}
+				open.num--;
+				//放入closed 
+				int father = closed.put_in(tmp);
+				if(father != closed.num-1){
+					closed.update();
+					continue;
+				}
+				int step = closed.l[father].step + 1;
+				
+				show();
+				int score = move_up();
+					cout<<score<<',';
+				if(score){
+					open.put_in(a,father,score+step,step);
+					move_down();
+				}
+				score = move_down();
+					cout<<score<<',';
+				if(score){
+					open.put_in(a,father,score+step,step);
+					move_up();
+				}
+				
+				score = move_left();
+					cout<<score<<',';
+				if(score){
+					open.put_in(a,father,score+step,step);
+					move_right();
+				}
+				
+				score = move_right();
+					cout<<score<<'\n';
+				if(score){
+					open.put_in(a,father,score+step,step);
+					move_left();
+				}
+//				open.sort();
+//				open.show();
+//				cout<<"\ndebug\n";
 			}
+			show();
 		}
 };
 
@@ -361,12 +433,6 @@ int main()
 
 {
 	board B = board();
-	B.show();
-	
-//	B.get_score_list();
-//	B.showsc();
-//	B.get_ops();
-//	B.showop();
 	B.A_star();
 	return 0;
 }
