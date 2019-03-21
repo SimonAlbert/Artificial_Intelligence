@@ -6,7 +6,7 @@
 
 using namespace std;
 int score(int **a);
-//ÈıÎ¬Êı×é¸´ÖÆ 
+//ä¸‰ç»´æ•°ç»„å¤åˆ¶ 
 void tri(int **a,int **b,int n=3){
 //	cout<<"tri"<<endl;
 	for(int i=0;i<n;i++){
@@ -15,7 +15,7 @@ void tri(int **a,int **b,int n=3){
 		}
 	}
 }
-//ÅĞ¶ÏÆåÅÌÊÇ·ñÏàÍ¬ 
+//åˆ¤æ–­æ£‹ç›˜æ˜¯å¦ç›¸åŒ 
 bool equal(int **a,int **b,int n=3){
 //	cout<<"equal"<<endl;
 	for(int i=0;i<n;i++){
@@ -28,9 +28,9 @@ bool equal(int **a,int **b,int n=3){
 	return true;
 }
 
-//½Úµã½á¹¹Ìå 
+//èŠ‚ç‚¹ç»“æ„ä½“ 
 struct node{
-//	¸¸½ÚµãµÄË÷Òı£¬Ò»¶¨ÔÚclosed±íÄÚ 
+//	çˆ¶èŠ‚ç‚¹çš„ç´¢å¼•ï¼Œä¸€å®šåœ¨closedè¡¨å†… 
 	int father;
 	int **a;
 	int point;
@@ -55,7 +55,7 @@ node* init_node(int **a,int father,int point,int step=0){
 	pn->point = point;
 	return pn;
 }
-//±í ÔÚ´æ´¢Î»ÖÃ²»±äµÄÇ°ÌáÏÂÎ¬»¤open±íºÍclosed±í
+//è¡¨ åœ¨å­˜å‚¨ä½ç½®ä¸å˜çš„å‰æä¸‹ç»´æŠ¤openè¡¨å’Œclosedè¡¨
 class list{
 	public:
 		node* l;
@@ -84,10 +84,10 @@ class list{
 			}
 			return -1;
 		}
-//		²åÈëÊ±ĞèÒªµÄ²ÎÊı 
+//		æ’å…¥æ—¶éœ€è¦çš„å‚æ•° 
 		int put_in(int **a,int father,int point,int step){
 			int index = num;
-//			½ÚµãÒÑ´æÔÚÊ± 
+//			èŠ‚ç‚¹å·²å­˜åœ¨æ—¶ 
 			int pos = in_list(a);
 			if(pos != -1){
 				if(step < l[pos].step){
@@ -108,7 +108,7 @@ class list{
 		}
 		int put_in(node* pn){
 			int index = num;
-//			½ÚµãÒÑ´æÔÚÊ± 
+//			èŠ‚ç‚¹å·²å­˜åœ¨æ—¶ 
 			int pos = in_list(pn->a);
 			if(pos != -1){
 				if(pn->step < l[pos].step){
@@ -127,7 +127,7 @@ class list{
 				return index;
 			}
 		}
-//		open±í×îÓÅ½Úµã·ÅÆ¨¹ÉÉÏ 
+//		openè¡¨æœ€ä¼˜èŠ‚ç‚¹æ”¾å±è‚¡ä¸Š 
 		void sort(){
 			if(num <= 1) return;
 			int min = num-1;
@@ -173,7 +173,7 @@ class list{
 		}
 }; 
 
-//ÂÒĞò £¨Éú³ÉÆåÅÌÊ±Ê¹ÓÃ£© 
+//ä¹±åº ï¼ˆç”Ÿæˆæ£‹ç›˜æ—¶ä½¿ç”¨ï¼‰ 
 void rand_sort(int *a,int n){
 	stack<int>s;
 	while(n){
@@ -189,7 +189,7 @@ void rand_sort(int *a,int n){
 	}
 }
 
-//·µ»Ø×îĞ¡ÖµË÷Òı £¨ÒÆ¶¯ÓÅÏÈ¼¶ÁĞ±í£© 
+//è¿”å›æœ€å°å€¼ç´¢å¼• ï¼ˆç§»åŠ¨ä¼˜å…ˆçº§åˆ—è¡¨ï¼‰ 
 int max_index(int *a,int n=4){
 	int index = 0;
 	for(int i=0;i<n;i++){
@@ -200,7 +200,7 @@ int max_index(int *a,int n=4){
 	return index;
 }
 
-//Ô½½Ó½üÄ¿±êscoreÔ½´ó 
+//è¶Šæ¥è¿‘ç›®æ ‡scoreè¶Šå¤§ 
 int score(int **a){
 	int score=0;
 	int t=0;
@@ -224,7 +224,7 @@ int score(int **a){
 	return score;
 } 
 
-//°ËÊıÂë 
+//å…«æ•°ç  
 class board{
 	public:
 		int **a;
@@ -262,26 +262,7 @@ class board{
 				else if(op==3)
 					move_right();
 			}
-//			int x = rand()%8;
-//			space[0] = x%8;
-//			space[1] = x/8;
-//			int arr[8];
-//			for(int i=0;i<8;i++){
-//				arr[i] = i+1;
-//			}
-//			rand_sort(arr,8);
-//			int t=0;
-//			for(int i=0;i<3;i++){
-//				for(int j=0;j<3;j++){
-//					if(i==space[0]&&j==space[1]){
-//						a[i][j] = 0;
-//					}
-//					else{
-//						a[i][j] = arr[t];
-//						t++;
-//					}
-//				}
-//			}
+			a[i][j] = arr[t];
 		}
 		void show(){
 			for(int i=0;i<3;i++){
@@ -292,7 +273,7 @@ class board{
 			}
 			cout<<endl;
 		}
-		//ÕâÀïµÄmoveÒÆ¶¯µÄ²»ÊÇÊı×Ö£¬¶øÊÇ¿Õ°×¸ñµÄÎ»ÖÃ 
+		//è¿™é‡Œçš„moveç§»åŠ¨çš„ä¸æ˜¯æ•°å­—ï¼Œè€Œæ˜¯ç©ºç™½æ ¼çš„ä½ç½® 
 		int move_up(){
 			if(space[0] == 0){
 //				cout<<"can not move up\n";
@@ -353,7 +334,7 @@ class board{
 				}
 			}
 		}
-		//A*Ëã·¨ open&closed
+		//A*ç®—æ³• open&closed
 		void A_star(){
 			int **b = (int**)malloc(sizeof(int*)*3);
 			for(int i=0;i<3;i++){
@@ -372,21 +353,21 @@ class board{
 			int deep=0;
 			while(open.num){
 //				if(deep++ > 50) return;
-				//´Óopen±íÖĞÈ¡³öÒ»¸ö×îºÃµÄ½Úµã
+				//ä»openè¡¨ä¸­å–å‡ºä¸€ä¸ªæœ€å¥½çš„èŠ‚ç‚¹
 				if(score(a) >= 3) 
 				open.sort();
 				node* tmp = &(open.l[open.num-1]);
 				tri(a,tmp->a);
 				get_space();
 				
-				//ÅĞ¶ÏÕâ¸ö½ÚµãÊÇ·ñÊÇÄ¿µÄ½Úµã
+				//åˆ¤æ–­è¿™ä¸ªèŠ‚ç‚¹æ˜¯å¦æ˜¯ç›®çš„èŠ‚ç‚¹
 				if(equal(a,b)){
 					show();
 					cout<<"\nsuccess\n";
 					return;
 				}
 				open.num--;
-				//·ÅÈëclosed 
+				//æ”¾å…¥closed 
 				int father = closed.put_in(tmp);
 				if(father != closed.num-1){
 					closed.update();
